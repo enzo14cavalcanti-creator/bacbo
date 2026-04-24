@@ -215,6 +215,9 @@ tr:last-child td{border-bottom:none;}
       <button class="sb-btn" onclick="setTab(2,this)" title="Configurações">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
       </button>
+      <button class="sb-btn" onclick="setTab(3,this)" title="Custos Fixos">
+        <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/><path d="M6 15h4M14 15h4"/></svg>
+      </button>
     </nav>
 
     <!-- ABA 1: DASHBOARD -->
@@ -417,14 +420,119 @@ tr:last-child td{border-bottom:none;}
       </div>
     </div>
 
+    <!-- ABA 4: CUSTOS FIXOS -->
+    <div class="content" id="tab-3" style="display:none;">
+      <div class="section-label">Custos fixos da operação</div>
+      <div class="cards-grid" style="margin-bottom:18px;">
+        <div class="metric-card">
+          <div class="mc-icon" style="background:rgba(255,77,109,.1);"><svg viewBox="0 0 24 24" stroke="#ff4d6d" fill="none" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></div>
+          <div class="mc-label">Total fixos/mês</div>
+          <div class="mc-value red" id="cf-total-mes">R$ 0,00</div>
+          <div class="mc-sub" id="cf-total-sub">0 itens cadastrados</div>
+        </div>
+        <div class="metric-card">
+          <div class="mc-icon" style="background:rgba(245,197,66,.1);"><svg viewBox="0 0 24 24" stroke="#f5c542" fill="none" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+          <div class="mc-label">Total funcionários/mês</div>
+          <div class="mc-value yellow" id="cf-total-func">R$ 0,00</div>
+          <div class="mc-sub" id="cf-func-sub">0 funcionários</div>
+        </div>
+        <div class="metric-card">
+          <div class="mc-icon" style="background:rgba(77,166,255,.1);"><svg viewBox="0 0 24 24" stroke="#4da6ff" fill="none" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+          <div class="mc-label">Vencem em 7 dias</div>
+          <div class="mc-value blue" id="cf-vence-logo">0</div>
+          <div class="mc-sub">itens a pagar em breve</div>
+        </div>
+        <div class="metric-card">
+          <div class="mc-icon" style="background:rgba(0,229,160,.1);"><svg viewBox="0 0 24 24" stroke="#00e5a0" fill="none" stroke-width="1.8"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="mc-label">Pagos este mês</div>
+          <div class="mc-value green" id="cf-pagos">R$ 0,00</div>
+          <div class="mc-sub" id="cf-pagos-sub">0 itens</div>
+        </div>
+      </div>
+
+      <div class="form-sec" style="margin-bottom:18px;">
+        <div class="form-sec-title"><span class="dot-g"></span>Adicionar custo fixo</div>
+        <div class="inputs-grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));">
+          <div class="fg"><label>Nome / Descrição</label><input type="text" id="cf-inp-nome" placeholder="ex: Vercel, João Silva"/></div>
+          <div class="fg"><label>Tipo</label>
+            <select id="cf-inp-tipo" style="width:100%;padding:8px 11px;font-size:13px;background:var(--bg-700);border:1px solid var(--border-md);border-radius:8px;color:var(--text-primary);outline:none;">
+              <option value="ferramenta">Ferramenta / Software</option>
+              <option value="funcionario">Funcionário / Freelancer</option>
+              <option value="outro">Outro</option>
+            </select>
+          </div>
+          <div class="fg"><label>Valor (R$)</label><input type="number" id="cf-inp-valor" placeholder="150,00" step="0.01" min="0"/></div>
+          <div class="fg"><label>Dia vencimento</label><input type="number" id="cf-inp-venc" placeholder="ex: 10" min="1" max="31"/></div>
+          <div class="fg"><label>Conta de saída</label>
+            <select id="cf-inp-conta" style="width:100%;padding:8px 11px;font-size:13px;background:var(--bg-700);border:1px solid var(--border-md);border-radius:8px;color:var(--text-primary);outline:none;">
+              <option value="">Selecione...</option>
+              <option value="Nubank">Nubank</option>
+              <option value="Inter">Inter</option>
+              <option value="Itaú">Itaú</option>
+              <option value="Bradesco">Bradesco</option>
+              <option value="C6 Bank">C6 Bank</option>
+              <option value="Caixa">Caixa</option>
+              <option value="Outro">Outro</option>
+            </select>
+          </div>
+          <div class="fg"><label>Recorrência</label>
+            <select id="cf-inp-recorr" style="width:100%;padding:8px 11px;font-size:13px;background:var(--bg-700);border:1px solid var(--border-md);border-radius:8px;color:var(--text-primary);outline:none;">
+              <option value="mensal">Mensal</option>
+              <option value="semanal">Semanal</option>
+              <option value="unico">Único</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn-add" onclick="addCusto()">+ Adicionar custo</button>
+      </div>
+
+      <div class="charts-grid" style="margin-bottom:18px;">
+        <div class="chart-card">
+          <div class="chart-title">Distribuição por tipo</div>
+          <div class="chart-wrap" style="height:200px;"><canvas id="cf-ch-tipo"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Custos por conta bancária</div>
+          <div class="chart-wrap" style="height:200px;"><canvas id="cf-ch-conta"></canvas></div>
+        </div>
+      </div>
+
+      <div class="chart-card" style="margin-bottom:18px;">
+        <div class="chart-title">Evolução mensal dos custos fixos</div>
+        <div class="chart-wrap" style="height:170px;"><canvas id="cf-ch-mensal"></canvas></div>
+      </div>
+
+      <div class="table-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+          <div class="chart-title" style="margin-bottom:0;">Lista de custos fixos</div>
+          <select id="cf-filtro-tipo" onchange="renderCustos()" style="background:var(--bg-700);border:1px solid var(--border-md);border-radius:7px;color:var(--text-secondary);padding:5px 10px;font-size:11px;outline:none;">
+            <option value="">Todos os tipos</option>
+            <option value="anuncio">Anúncios Meta</option>
+            <option value="ferramenta">Ferramentas</option>
+            <option value="funcionario">Funcionários</option>
+            <option value="outro">Outros</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Nome</th><th>Tipo</th><th>Valor</th><th>Venc. dia</th><th>Conta</th><th>Recorrência</th><th>Status</th><th>Pago?</th><th></th>
+            </tr></thead>
+            <tbody id="cf-tbody"><tr><td colspan="9" class="empty-st">Nenhum custo cadastrado ainda.</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
 <script>
 const IMPOSTO = 0.1215;
 let dados = [];
-let senhaAtual = 'bacbo2024';
-let chL=null,chC=null,chG=null,chP=null,chRel=null;
+let custos = [];
+let senhaAtual = 'AlmeidaBacBo!';
+let chL=null,chC=null,chG=null,chP=null,chRel=null,chCfTipo=null,chCfConta=null,chCfMensal=null;
 
 /* STORAGE — localStorage */
 function store(key, val){ try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){} }
@@ -444,6 +552,8 @@ function loadData(){
     if(cfg.metaReceita) document.getElementById('cfg-meta-receita').value = cfg.metaReceita;
     if(cfg.orcamento) document.getElementById('cfg-orcamento').value = cfg.orcamento;
   }
+  const savedCustos = retrieve('igaming_custos');
+  if(savedCustos){ custos = savedCustos; }
   document.getElementById('inp-data').value = new Date().toISOString().split('T')[0];
   renderAll();
 }
@@ -502,13 +612,14 @@ function alterarSenha(){
 
 /* TABS */
 function setTab(i, btn){
-  [0,1,2].forEach(n => {
+  [0,1,2,3].forEach(n => {
     document.getElementById('tab-'+n).style.display = n===i ? 'block' : 'none';
   });
   document.querySelectorAll('.sb-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   if(i===1) renderRelatorio();
   if(i===2) renderMetas();
+  if(i===3) renderCustos();
 }
 
 /* DATA */
@@ -716,6 +827,136 @@ function renderMetas(){
       </div>
     </div>`;
   }).join('');
+}
+
+/* CUSTOS FIXOS */
+function addCusto(){
+  const nome=document.getElementById('cf-inp-nome').value.trim();
+  const tipo=document.getElementById('cf-inp-tipo').value;
+  const valor=parseFloat(document.getElementById('cf-inp-valor').value);
+  const venc=parseInt(document.getElementById('cf-inp-venc').value);
+  const conta=document.getElementById('cf-inp-conta').value;
+  const recorr=document.getElementById('cf-inp-recorr').value;
+  if(!nome||isNaN(valor)||isNaN(venc)||!conta){alert('Preencha todos os campos.');return;}
+  custos.push({id:Date.now(),nome,tipo,valor,venc,conta,recorr,pago:false});
+  store('igaming_custos',custos);
+  renderCustos();
+  document.getElementById('cf-inp-nome').value='';
+  document.getElementById('cf-inp-valor').value='';
+  document.getElementById('cf-inp-venc').value='';
+}
+function deleteCusto(id){
+  custos=custos.filter(c=>c.id!==id);
+  store('igaming_custos',custos);
+  renderCustos();
+}
+function togglePago(id){
+  const c=custos.find(c=>c.id===id);
+  if(c) c.pago=!c.pago;
+  store('igaming_custos',custos);
+  renderCustos();
+}
+function renderCustos(){
+  const hoje=new Date();
+  const diaHoje=hoje.getDate();
+  const mesAtual=hoje.toISOString().slice(0,7);
+  const filtro=document.getElementById('cf-filtro-tipo')?.value||'';
+
+  // Calcula gasto Meta Ads do mês atual automaticamente
+  const dadosMesAtual=dados.filter(d=>d.data.startsWith(mesAtual));
+  const gastoMetaMes=dadosMesAtual.reduce((s,d)=>s+gt(d.gasto),0);
+
+  // Linha virtual de anúncios Meta (não entra na lista editável)
+  const listaReal=filtro?custos.filter(c=>c.tipo===filtro):custos;
+  const listaComMeta=filtro&&filtro!=='anuncio'?listaReal:[
+    ...listaReal,
+    ...(filtro===''||filtro==='anuncio'?[{id:'meta-auto',nome:'Meta Ads (anúncios)',tipo:'anuncio',valor:gastoMetaMes,venc:0,conta:'Meta Ads',recorr:'mensal',pago:true,auto:true}]:[])
+  ];
+
+  // Cards
+  const mensais=custos.filter(c=>c.recorr==='mensal'||c.recorr==='semanal');
+  const totalFixos=mensais.reduce((s,c)=>s+c.valor,0);
+  const totalMes=totalFixos+gastoMetaMes; // fixos + anúncios
+  const funcs=custos.filter(c=>c.tipo==='funcionario');
+  const totalFunc=funcs.reduce((s,c)=>s+c.valor,0);
+  const vence7=custos.filter(c=>{const d=c.venc-diaHoje;return d>=0&&d<=7&&!c.pago;}).length;
+  const pagos=custos.filter(c=>c.pago);
+  const totalPago=pagos.reduce((s,c)=>s+c.valor,0)+gastoMetaMes;
+
+  document.getElementById('cf-total-mes').textContent=brl(totalMes);
+  document.getElementById('cf-total-sub').textContent='fixos '+brl(totalFixos)+' + ads '+brl(gastoMetaMes);
+  document.getElementById('cf-total-func').textContent=brl(totalFunc);
+  document.getElementById('cf-func-sub').textContent=funcs.length+' funcionário(s)';
+  document.getElementById('cf-vence-logo').textContent=vence7;
+  document.getElementById('cf-pagos').textContent=brl(totalPago);
+  document.getElementById('cf-pagos-sub').textContent=(pagos.length)+' fixos + ads do mês';
+
+  // Tabela
+  const tbody=document.getElementById('cf-tbody');
+  const lista=filtro&&filtro!=='anuncio'?listaReal:[
+    {id:'meta-auto',nome:'Meta Ads — anúncios',tipo:'anuncio',valor:gastoMetaMes,venc:0,conta:'Meta Ads',recorr:'mensal',pago:true,auto:true},
+    ...listaReal
+  ];
+  if(!lista.length){tbody.innerHTML='<tr><td colspan="9" class="empty-st">Nenhum custo cadastrado ainda.</td></tr>';return;}
+  const tipoLabel={ferramenta:'Ferramenta',funcionario:'Funcionário',anuncio:'Custo de anúncios',outro:'Outro'};
+  const recorrLabel={mensal:'Mensal',semanal:'Semanal',unico:'Único'};
+  tbody.innerHTML=lista.map(c=>{
+    const diasParaVenc=c.venc-diaHoje;
+    let statusPill;
+    if(c.auto){ statusPill='<span class="pill" style="background:rgba(77,166,255,.12);color:#4da6ff;">Auto · mês atual</span>'; }
+    else if(c.pago){ statusPill='<span class="pill p-green">Pago</span>'; }
+    else if(diasParaVenc<0){ statusPill='<span class="pill p-red">Vencido</span>'; }
+    else if(diasParaVenc<=7){ statusPill='<span class="pill" style="background:rgba(245,197,66,.12);color:#f5c542;">Vence em breve</span>'; }
+    else{ statusPill='<span class="pill p-blue">Em dia</span>'; }
+    const acoes=c.auto
+      ?`<td><span style="font-size:10px;color:var(--text-muted);">automático</span></td><td></td>`
+      :`<td><button onclick="togglePago(${c.id})" style="background:${c.pago?'rgba(0,229,160,.12)':'var(--bg-600)'};border:1px solid ${c.pago?'rgba(0,229,160,.2)':'var(--border-md)'};color:${c.pago?'var(--green)':'var(--text-secondary)'};border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer;">${c.pago?'✓ Pago':'Marcar pago'}</button></td><td><button class="del-btn" onclick="deleteCusto(${c.id})">✕</button></td>`;
+    const rowStyle=c.auto?'background:rgba(77,166,255,.04);':'';
+    return`<tr style="${rowStyle}">
+      <td style="font-weight:500;">${c.nome}${c.auto?` <span style="font-size:9px;color:var(--blue);background:rgba(77,166,255,.1);padding:1px 6px;border-radius:4px;margin-left:4px;">meta ads</span>`:''}</td>
+      <td>${tipoLabel[c.tipo]||c.tipo}</td>
+      <td style="color:var(--red);">${brl(c.valor)}</td>
+      <td>${c.auto?'—':'Dia '+c.venc}</td>
+      <td>${c.conta}</td>
+      <td>${recorrLabel[c.recorr]||c.recorr}</td>
+      <td>${statusPill}</td>
+      ${acoes}
+    </tr>`;
+  }).join('');
+
+  // Gráfico tipo — inclui anúncios Meta
+  const tiposMap={ferramenta:0,funcionario:0,anuncio:gastoMetaMes,outro:0};
+  custos.forEach(c=>{ if(tiposMap[c.tipo]!==undefined) tiposMap[c.tipo]+=c.valor; });
+  const cfChTipo=document.getElementById('cf-ch-tipo');
+  if(cfChTipo){ const ex=Chart.getChart(cfChTipo);if(ex)ex.destroy();
+    new Chart(cfChTipo,{type:'doughnut',data:{labels:['Ferramentas','Funcionários','Anúncios Meta','Outros'],datasets:[{data:[tiposMap.ferramenta,tiposMap.funcionario,tiposMap.anuncio,tiposMap.outro],backgroundColor:['#4da6ff','#f5c542','#ff8c42','#888'],borderWidth:0,hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#888',font:{size:10},boxWidth:10,padding:10}}}}});
+  }
+
+  // Gráfico conta
+  const contaMap={};
+  custos.forEach(c=>{ contaMap[c.conta]=(contaMap[c.conta]||0)+c.valor; });
+  const contaLabels=Object.keys(contaMap);
+  const contaVals=contaLabels.map(k=>contaMap[k]);
+  const contaColors=['#4da6ff','#00e5a0','#f5c542','#ff8c42','#ff4d6d','#a78bfa','#34d399'];
+  const cfChConta=document.getElementById('cf-ch-conta');
+  if(cfChConta){ const ex=Chart.getChart(cfChConta);if(ex)ex.destroy();
+    new Chart(cfChConta,{type:'bar',data:{labels:contaLabels,datasets:[{data:contaVals,backgroundColor:contaColors.slice(0,contaLabels.length),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#555',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'},border:{color:'rgba(255,255,255,0.06)'}},y:{ticks:{color:'#555',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'},border:{color:'rgba(255,255,255,0.06)'}}}}}); 
+  }
+
+  // Gráfico mensal — fixos + anúncios Meta do mês atual
+  const meses=[];const vals=[];
+  const nomeMes=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  for(let i=5;i>=0;i--){
+    const d=new Date();d.setMonth(d.getMonth()-i);
+    const mesStr=d.toISOString().slice(0,7);
+    meses.push(nomeMes[d.getMonth()]);
+    const gastoMesI=dados.filter(x=>x.data.startsWith(mesStr)).reduce((s,x)=>s+gt(x.gasto),0);
+    vals.push(parseFloat((totalFixos+gastoMesI).toFixed(2)));
+  }
+  const cfChMensal=document.getElementById('cf-ch-mensal');
+  if(cfChMensal){ const ex=Chart.getChart(cfChMensal);if(ex)ex.destroy();
+    new Chart(cfChMensal,{type:'line',data:{labels:meses,datasets:[{data:vals,borderColor:'#ff4d6d',backgroundColor:'rgba(255,77,109,0.08)',tension:.4,pointRadius:4,pointBackgroundColor:'#ff4d6d',fill:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#555',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'},border:{color:'rgba(255,255,255,0.06)'}},y:{ticks:{color:'#555',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'},border:{color:'rgba(255,255,255,0.06)'}}}}});
+  }
 }
 </script>
 </body>
