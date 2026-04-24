@@ -527,49 +527,74 @@ tr:last-child td{border-bottom:none;}
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const IMPOSTO = 0.1215;
+const SUPA_URL = 'https://wttyphiehhltddodldog.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0dHlwaGllaGhsdGRkb2RsZG9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5ODgzMTQsImV4cCI6MjA5MjU2NDMxNH0.yLGwl76d-jeUpbwuTAfYRR1VRA8mZleEgSJ_M26rfZk';
+const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
+
 let dados = [];
 let custos = [];
 let senhaAtual = 'AlmeidaBacBo!';
 let chL=null,chC=null,chG=null,chP=null,chRel=null,chCfTipo=null,chCfConta=null,chCfMensal=null;
 
-/* STORAGE — localStorage */
-function store(key, val){ try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){} }
-function retrieve(key){ try{ const v=localStorage.getItem(key); return v?JSON.parse(v):null; }catch(e){ return null; } }
-
-function loadData(){
-  const saved = retrieve('igaming_dados');
-  if(saved){ dados = saved; }
-  const cpa = retrieve('igaming_cpa');
-  if(cpa) document.getElementById('cpa-valor').value = cpa;
-  const senha = retrieve('igaming_senha');
-  if(senha) senhaAtual = senha;
-  const cfg = retrieve('igaming_config');
-  if(cfg){
-    if(cfg.metaLeads) document.getElementById('cfg-meta-leads').value = cfg.metaLeads;
-    if(cfg.metaCpas) document.getElementById('cfg-meta-cpas').value = cfg.metaCpas;
-    if(cfg.metaReceita) document.getElementById('cfg-meta-receita').value = cfg.metaReceita;
-    if(cfg.orcamento) document.getElementById('cfg-orcamento').value = cfg.orcamento;
+function showLoading(msg='Carregando...'){
+  let el=document.getElementById('loading-overlay');
+  if(!el){
+    el=document.createElement('div');
+    el.id='loading-overlay';
+    el.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(13,13,13,.85);display:flex;align-items:center;justify-content:center;z-index:9999;font-size:14px;color:#888;flex-direction:column;gap:10px;';
+    el.innerHTML=`<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4da6ff" stroke-width="2" style="animation:spin 1s linear infinite"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg><span id="loading-msg">${msg}</span>`;
+    document.head.insertAdjacentHTML('beforeend','<style>@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}</style>');
+    document.body.appendChild(el);
   }
-  const savedCustos = retrieve('igaming_custos');
-  if(savedCustos){ custos = savedCustos; }
-  document.getElementById('inp-data').value = new Date().toISOString().split('T')[0];
+  document.getElementById('loading-msg').textContent=msg;
+  el.style.display='flex';
+}
+function hideLoading(){ const el=document.getElementById('loading-overlay'); if(el) el.style.display='none'; }
+
+async function loadData(){
+  showLoading('Carregando dados...');
+  try{
+    const [r1,r2,r3] = await Promise.all([
+      supa.from('registros').select('*').order('data',{ascending:true}),
+      supa.from('custos').select('*').order('created_at',{ascending:true}),
+      supa.from('config').select('*')
+    ]);
+    if(r1.data) dados=r1.data.map(d=>({...d,final:d.final}));
+    if(r2.data) custos=r2.data;
+    if(r3.data){
+      const cfg={};
+      r3.data.forEach(c=>cfg[c.chave]=c.valor);
+      if(cfg.cpa) document.getElementById('cpa-valor').value=cfg.cpa;
+      if(cfg.senha) senhaAtual=cfg.senha;
+      if(cfg.metaLeads) document.getElementById('cfg-meta-leads').value=cfg.metaLeads;
+      if(cfg.metaCpas) document.getElementById('cfg-meta-cpas').value=cfg.metaCpas;
+      if(cfg.metaReceita) document.getElementById('cfg-meta-receita').value=cfg.metaReceita;
+      if(cfg.orcamento) document.getElementById('cfg-orcamento').value=cfg.orcamento;
+    }
+  }catch(e){ console.error(e); }
+  document.getElementById('inp-data').value=new Date().toISOString().split('T')[0];
+  hideLoading();
   renderAll();
 }
 
-function saveData(){
-  store('igaming_dados', dados);
-  store('igaming_cpa', document.getElementById('cpa-valor').value);
+async function saveConfig(chave, valor){
+  await supa.from('config').upsert({chave,valor},{onConflict:'chave'});
 }
 
-function salvarConfig(){
-  store('igaming_config',{
-    metaLeads: document.getElementById('cfg-meta-leads').value,
-    metaCpas: document.getElementById('cfg-meta-cpas').value,
-    metaReceita: document.getElementById('cfg-meta-receita').value,
-    orcamento: document.getElementById('cfg-orcamento').value,
-  });
+async function saveData(){
+  await saveConfig('cpa', document.getElementById('cpa-valor').value);
+}
+
+async function salvarConfig(){
+  await Promise.all([
+    saveConfig('metaLeads', document.getElementById('cfg-meta-leads').value),
+    saveConfig('metaCpas', document.getElementById('cfg-meta-cpas').value),
+    saveConfig('metaReceita', document.getElementById('cfg-meta-receita').value),
+    saveConfig('orcamento', document.getElementById('cfg-orcamento').value),
+  ]);
   renderMetas();
 }
 
@@ -593,7 +618,7 @@ function doLogout(){
   document.getElementById('login-screen').style.display='flex';
   document.getElementById('inp-senha').value='';
 }
-function alterarSenha(){
+async function alterarSenha(){
   const atual = document.getElementById('cfg-senha-atual').value;
   const nova = document.getElementById('cfg-senha-nova').value;
   const conf = document.getElementById('cfg-senha-conf').value;
@@ -603,7 +628,7 @@ function alterarSenha(){
   if(nova.length < 4){ msg.style.background='rgba(255,77,109,.08)'; msg.style.color='#ff4d6d'; msg.style.border='1px solid rgba(255,77,109,.2)'; msg.textContent='Nova senha muito curta (mínimo 4 caracteres).'; return; }
   if(nova !== conf){ msg.style.background='rgba(255,77,109,.08)'; msg.style.color='#ff4d6d'; msg.style.border='1px solid rgba(255,77,109,.2)'; msg.textContent='As senhas não coincidem.'; return; }
   senhaAtual = nova;
-  store('igaming_senha', nova);
+  await saveConfig('senha', nova);
   msg.style.background='rgba(0,229,160,.08)'; msg.style.color='#00e5a0'; msg.style.border='1px solid rgba(0,229,160,.2)'; msg.textContent='Senha alterada com sucesso!';
   document.getElementById('cfg-senha-atual').value='';
   document.getElementById('cfg-senha-nova').value='';
@@ -623,22 +648,34 @@ function setTab(i, btn){
 }
 
 /* DATA */
-function addEntry(){
+async function addEntry(){
   const data = document.getElementById('inp-data').value;
   const gasto = parseFloat(document.getElementById('inp-gasto').value);
   const meta = parseFloat(document.getElementById('inp-meta').value);
   const fin = parseFloat(document.getElementById('inp-final').value);
   const cpas = parseFloat(document.getElementById('inp-cpas').value);
   if(!data||isNaN(gasto)||isNaN(meta)||isNaN(fin)||isNaN(cpas)){ alert('Preencha todos os campos.'); return; }
-  dados.push({data,gasto,meta,final:fin,cpas});
-  dados.sort((a,b)=>a.data.localeCompare(b.data));
-  saveData(); renderAll();
+  showLoading('Salvando...');
+  const {data:row,error} = await supa.from('registros').insert({data,gasto,meta,final:fin,cpas}).select().single();
+  if(!error && row){ dados.push(row); dados.sort((a,b)=>a.data.localeCompare(b.data)); }
+  await saveData();
+  hideLoading(); renderAll();
   ['inp-gasto','inp-meta','inp-final','inp-cpas'].forEach(id=>document.getElementById(id).value='');
 }
-function deleteEntry(i){ dados.splice(i,1); saveData(); renderAll(); }
-function apagarTudo(){
-  if(confirm('Tem certeza? Todos os registros serão apagados permanentemente.')){ dados=[]; saveData(); renderAll(); }
+async function deleteEntry(id){
+  showLoading('Removendo...');
+  await supa.from('registros').delete().eq('id',id);
+  dados=dados.filter(d=>d.id!==id);
+  hideLoading(); renderAll();
 }
+async function apagarTudo(){
+  if(confirm('Tem certeza? Todos os registros serão apagados permanentemente.')){
+    showLoading('Apagando...');
+    await supa.from('registros').delete().neq('id',0);
+    dados=[]; hideLoading(); renderAll();
+  }
+}
+function saveAndRender(){ saveData(); renderAll(); }
 
 /* HELPERS */
 const gt = g => g*(1+IMPOSTO);
@@ -691,7 +728,7 @@ function renderTable(){
     if(cpaV===0){pill='Indefinido';ptag='p-blue';}
     else if(lucro>0){pill='Lucrativo';ptag='p-green';}
     else{pill='Prejuízo';ptag='p-red';}
-    return`<tr><td>${fmt(d.data)}</td><td>${brl(d.gasto)}</td><td>${brl(im)}</td><td>${brl(total)}</td><td>${d.meta}</td><td>${d.final}</td><td>${d.cpas}</td><td>${brl(cplM)}</td><td>${brl(cplF)}</td><td>${d.cpas>0?brl(cC):'—'}</td><td><span class="pill ${ptag}">${pill}</span></td><td><button class="del-btn" onclick="deleteEntry(${i})">✕</button></td></tr>`;
+    return`<tr><td>${fmt(d.data)}</td><td>${brl(d.gasto)}</td><td>${brl(im)}</td><td>${brl(total)}</td><td>${d.meta}</td><td>${d.final}</td><td>${d.cpas}</td><td>${brl(cplM)}</td><td>${brl(cplF)}</td><td>${d.cpas>0?brl(cC):'—'}</td><td><span class="pill ${ptag}">${pill}</span></td><td><button class="del-btn" onclick="deleteEntry(${d.id})">✕</button></td></tr>`;
   }).join('');
 }
 
@@ -830,7 +867,7 @@ function renderMetas(){
 }
 
 /* CUSTOS FIXOS */
-function addCusto(){
+async function addCusto(){
   const nome=document.getElementById('cf-inp-nome').value.trim();
   const tipo=document.getElementById('cf-inp-tipo').value;
   const valor=parseFloat(document.getElementById('cf-inp-valor').value);
@@ -838,22 +875,25 @@ function addCusto(){
   const conta=document.getElementById('cf-inp-conta').value;
   const recorr=document.getElementById('cf-inp-recorr').value;
   if(!nome||isNaN(valor)||isNaN(venc)||!conta){alert('Preencha todos os campos.');return;}
-  custos.push({id:Date.now(),nome,tipo,valor,venc,conta,recorr,pago:false});
-  store('igaming_custos',custos);
-  renderCustos();
+  showLoading('Salvando...');
+  const {data:row,error}=await supa.from('custos').insert({nome,tipo,valor,venc,conta,recorr,pago:false}).select().single();
+  if(!error&&row) custos.push(row);
+  hideLoading(); renderCustos();
   document.getElementById('cf-inp-nome').value='';
   document.getElementById('cf-inp-valor').value='';
   document.getElementById('cf-inp-venc').value='';
 }
-function deleteCusto(id){
+async function deleteCusto(id){
+  showLoading('Removendo...');
+  await supa.from('custos').delete().eq('id',id);
   custos=custos.filter(c=>c.id!==id);
-  store('igaming_custos',custos);
-  renderCustos();
+  hideLoading(); renderCustos();
 }
-function togglePago(id){
+async function togglePago(id){
   const c=custos.find(c=>c.id===id);
-  if(c) c.pago=!c.pago;
-  store('igaming_custos',custos);
+  if(!c)return;
+  c.pago=!c.pago;
+  await supa.from('custos').update({pago:c.pago}).eq('id',id);
   renderCustos();
 }
 function renderCustos(){
