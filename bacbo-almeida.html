@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Bacbo Almeida — iGaming Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg-900:#0d0d0d;
+  --bg-800:#141414;
+  --bg-700:#1a1a1a;
+  --bg-600:#222222;
+  --bg-500:#2a2a2a;
+  --border:#ffffff0f;
+  --border-md:#ffffff18;
+  --text-primary:#f0f0f0;
+  --text-secondary:#888888;
+  --text-muted:#555555;
+  --green:#00e5a0;
+  --yellow:#f5c542;
+  --orange:#ff8c42;
+  --red:#ff4d6d;
+  --blue:#4da6ff;
+}
+body{background:var(--bg-900);color:var(--text-primary);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;min-height:100vh;}
+
+/* LOGIN */
+.login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px 20px;}
+.login-box{width:100%;max-width:380px;}
+.logo-wrap{display:flex;flex-direction:column;align-items:center;margin-bottom:36px;}
+.logo-icon-wrap{width:68px;height:68px;border-radius:16px;background:var(--bg-700);border:1px solid var(--border-md);display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
+.logo-brand{font-size:24px;font-weight:500;color:var(--text-primary);letter-spacing:.5px;}
+.logo-brand span{color:var(--yellow);}
+.logo-tagline{font-size:10px;color:var(--text-muted);letter-spacing:3px;text-transform:uppercase;margin-top:4px;}
+.login-card{background:var(--bg-800);border:1px solid var(--border);border-radius:16px;padding:28px;}
+.login-title{font-size:14px;font-weight:500;color:var(--text-primary);margin-bottom:4px;}
+.login-sub{font-size:12px;color:var(--text-muted);margin-bottom:22px;}
+.err-msg{font-size:12px;color:var(--red);background:rgba(255,77,109,.08);border:1px solid rgba(255,77,109,.18);border-radius:8px;padding:8px 12px;margin-bottom:14px;display:none;}
+.err-msg.show{display:block;}
+.inp-lbl{display:block;font-size:10px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px;}
+.inp-field{width:100%;padding:11px 14px;font-size:14px;background:var(--bg-700);border:1px solid var(--border-md);border-radius:10px;color:var(--text-primary);outline:none;margin-bottom:16px;transition:border-color .15s;}
+.inp-field:focus{border-color:var(--blue);}
+.inp-field::placeholder{color:var(--text-muted);}
+.btn-login{width:100%;padding:12px;background:var(--yellow);color:#0d0d0d;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;}
+.btn-login:hover{opacity:.88;}
+.login-footer{text-align:center;margin-top:18px;font-size:11px;color:var(--text-muted);display:flex;align-items:center;justify-content:center;gap:5px;}
+.login-footer svg{width:12px;height:12px;stroke:var(--text-muted);fill:none;stroke-width:1.5;}
+
+/* DASHBOARD */
+.dash-wrap{min-height:100vh;display:flex;flex-direction:column;}
+.topbar{background:var(--bg-800);border-bottom:1px solid var(--border);padding:13px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
+.tb-logo-icon{width:32px;height:32px;background:var(--bg-600);border:1px solid var(--border-md);border-radius:8px;display:flex;align-items:center;justify-content:center;margin-right:10px;flex-shrink:0;}
+.tb-title{font-size:15px;font-weight:500;color:var(--text-primary);}
+.tb-title span{color:var(--yellow);}
+.tb-sub{font-size:11px;color:var(--text-muted);}
+.period-badge{background:var(--bg-700);border:1px solid var(--border);border-radius:6px;padding:5px 11px;font-size:11px;color:var(--text-secondary);}
+.btn-logout{background:rgba(255,77,109,.08);border:1px solid rgba(255,77,109,.18);border-radius:7px;padding:5px 12px;font-size:11px;color:var(--red);cursor:pointer;margin-left:8px;}
+.btn-logout:hover{background:rgba(255,77,109,.16);}
+
+.main{display:flex;flex:1;}
+.sidebar{width:52px;background:var(--bg-800);border-right:1px solid var(--border);padding:14px 0;display:flex;flex-direction:column;gap:4px;align-items:center;flex-shrink:0;}
+.sb-btn{width:36px;height:36px;border-radius:8px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.sb-btn.active{background:var(--bg-600);}
+.sb-btn svg{width:17px;height:17px;fill:none;stroke:var(--text-muted);stroke-width:1.5;}
+.sb-btn.active svg{stroke:var(--yellow);}
+.sb-divider{width:28px;height:1px;background:var(--border);margin:4px 0;}
+
+.content{flex:1;padding:20px;overflow-x:hidden;min-width:0;}
+.section-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;}
+
+/* CARDS */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin-bottom:18px;}
+.metric-card{background:var(--bg-800);border:1px solid var(--border);border-radius:12px;padding:15px;position:relative;overflow:hidden;}
+.mc-icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:9px;}
+.mc-icon svg{width:17px;height:17px;fill:none;stroke-width:1.8;}
+.mc-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;}
+.mc-value{font-size:21px;font-weight:500;line-height:1.1;}
+.mc-value.green{color:var(--green);}
+.mc-value.yellow{color:var(--yellow);}
+.mc-value.orange{color:var(--orange);}
+.mc-value.blue{color:var(--blue);}
+.mc-value.red{color:var(--red);}
+.mc-sub{font-size:10px;color:var(--text-muted);margin-top:3px;}
+.mc-spark{position:absolute;bottom:0;right:0;width:80px;height:40px;opacity:.4;}
+
+/* FORM */
+.form-sec{background:var(--bg-800);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:18px;}
+.form-sec-title{font-size:11px;font-weight:500;color:var(--text-secondary);margin-bottom:13px;display:flex;align-items:center;gap:7px;}
+.dot-g{width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;}
+.cpa-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+.cpa-row label{font-size:11px;color:var(--text-secondary);}
+.cpa-inp{background:var(--bg-700);border:1px solid var(--border-md);border-radius:8px;color:var(--text-primary);padding:7px 11px;font-size:13px;width:140px;outline:none;}
+.cpa-inp:focus{border-color:var(--blue);}
+.tax-badge{background:rgba(245,197,66,.08);border:1px solid rgba(245,197,66,.2);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--yellow);}
+.inputs-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:9px;margin-bottom:11px;}
+.fg label{display:block;font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
+.fg input{width:100%;padding:8px 11px;font-size:13px;background:var(--bg-700);border:1px solid var(--border-md);border-radius:8px;color:var(--text-primary);outline:none;}
+.fg input:focus{border-color:var(--blue);}
+.fg input::placeholder{color:var(--text-muted);}
+.btn-add{background:var(--blue);color:#0d0d0d;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:500;cursor:pointer;width:100%;}
+.btn-add:hover{opacity:.88;}
+
+/* CHARTS */
+.charts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-bottom:18px;}
+.chart-card{background:var(--bg-800);border:1px solid var(--border);border-radius:12px;padding:15px;}
+.chart-title{font-size:10px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;}
+.chart-wrap{position:relative;height:175px;}
+.leg-row{display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;}
+.leg{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-secondary);}
+.leg-sq{width:8px;height:8px;border-radius:2px;}
+
+/* TABLE */
+.table-card{background:var(--bg-800);border:1px solid var(--border);border-radius:12px;padding:15px;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:11px;min-width:680px;}
+th{color:var(--text-muted);font-weight:500;text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.4px;font-size:10px;}
+td{padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--text-primary);}
+tr:last-child td{border-bottom:none;}
+.pill{padding:2px 8px;border-radius:10px;font-size:10px;font-weight:500;}
+.p-green{background:rgba(0,229,160,.12);color:var(--green);}
+.p-red{background:rgba(255,77,109,.12);color:var(--red);}
+.p-blue{background:rgba(77,166,255,.12);color:var(--blue);}
+.del-btn{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:13px;padding:3px 6px;border-radius:4px;}
+.del-btn:hover{color:var(--red);}
+.empty-st{text-align:center;color:var(--text-muted);font-size:12px;padding:28px;}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .sidebar{width:48px;}
+  .cards-grid{grid-template-columns:1fr 1fr;}
+  .charts-grid{grid-template-columns:1fr;}
+  .content{padding:12px;}
+  .topbar{padding:10px 14px;}
+  .mc-value{font-size:18px;}
+  .tb-sub{display:none;}
+}
+@media(max-width:480px){
+  .cards-grid{grid-template-columns:1fr 1fr;}
+  .mc-value{font-size:16px;}
+  .inputs-grid{grid-template-columns:1fr 1fr;}
+}
+@media(max-width:360px){
+  .cards-grid{grid-template-columns:1fr;}
+  .sidebar{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- TELA 01 — LOGIN -->
+<div class="login-screen" id="login-screen">
+  <div class="login-box">
+    <div class="logo-wrap">
+      <div class="logo-icon-wrap">
+        <svg width="38" height="38" viewBox="0 0 40 40" fill="none">
+          <rect x="4" y="18" width="13" height="13" rx="3" fill="#f5c542" opacity=".95"/>
+          <rect x="6" y="7" width="9" height="9" rx="2" fill="#f5c542" opacity=".4"/>
+          <rect x="20" y="9" width="16" height="22" rx="3" fill="#4da6ff" opacity=".9"/>
+          <rect x="23" y="13" width="4" height="4" rx="1" fill="#0d0d0d" opacity=".7"/>
+          <rect x="29" y="13" width="4" height="4" rx="1" fill="#0d0d0d" opacity=".7"/>
+          <rect x="23" y="20" width="10" height="7" rx="1.5" fill="#0d0d0d" opacity=".5"/>
+        </svg>
+      </div>
+      <div style="text-align:center;">
+        <div class="logo-brand">Bacbo <span>Almeida</span></div>
+        <div class="logo-tagline">iGaming · Ads · Analytics</div>
+      </div>
+    </div>
+    <div class="login-card">
+      <div class="login-title">Acesso restrito</div>
+      <div class="login-sub">Digite a senha para acessar o painel</div>
+      <div class="err-msg" id="err-msg">Senha incorreta. Tente novamente.</div>
+      <label class="inp-lbl">Senha</label>
+      <input class="inp-field" type="password" id="inp-senha" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
+      <button class="btn-login" onclick="doLogin()">Entrar no painel</button>
+      <div class="login-footer">
+        <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Acesso protegido
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TELA 02 — DASHBOARD -->
+<div class="dash-wrap" id="dash-screen" style="display:none;">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;">
+      <div class="tb-logo-icon">
+        <svg width="18" height="18" viewBox="0 0 40 40" fill="none">
+          <rect x="4" y="18" width="13" height="13" rx="3" fill="#f5c542"/>
+          <rect x="20" y="9" width="16" height="22" rx="3" fill="#4da6ff" opacity=".9"/>
+        </svg>
+      </div>
+      <div>
+        <div class="tb-title">Bacbo <span>Almeida</span></div>
+        <div class="tb-sub">Meta Ads · Telegram</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;">
+      <span class="period-badge" id="periodo-lbl">Sem dados</span>
+      <button class="btn-logout" onclick="doLogout()">Sair</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <nav class="sidebar">
+      <button class="sb-btn active" onclick="setTab(0,this)" title="Dashboard">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      </button>
+      <button class="sb-btn" onclick="setTab(1,this)" title="Relatórios">
+        <svg viewBox="0 0 24 24"><path d="M12 20V10M6 20V4M18 20v-6"/></svg>
+      </button>
+      <button class="sb-btn" onclick="setTab(2,this)" title="Configurações">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      </button>
+    </nav>
+
+    <!-- ABA 1: DASHBOARD -->
+    <div class="content" id="tab-0">
+      <div class="section-label">Visão geral</div>
+      <div class="cards-grid">
+        <div class="metric-card">
+          <div class="mc-icon" style="background:rgba(77,166,255,.1);"><svg viewBox="0 0 24 24" stroke="#4da6ff"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+          <div class="mc-label">Gasto total (c/ imposto)</div>
+          <div class="mc-value blue" id="c-gasto">R$ 0,00</div>
+          <div class="mc-sub" id="c-gasto-sub">base R$ 0 + imposto R$ 0</div>
+          <canvas class="mc-spark" id="spark-gasto"></canvas>
+        </div>
+        <div class="metric-card">
+          <div class="mc-icon" style="background:rgba(0,229,160,.1);"><svg viewBox="0 0 24 24" stroke="#00e5a0"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          <div class="mc-label">Leads Meta Ads</div>
+          <div class="mc-value green" id="c-meta">0</div>
+          <div class="mc-sub">via gerenciador</div>
+          <canvas class="mc-spark" id="spark-meta"></canvas>
+        </div>
+        <div class="metric-card">
+          <div class="mc-icon" style="background:rgba(0,229,160,.1);"><svg viewBox="0 0 24 24" stroke="#00e5a0"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+          <div class="mc-label">Grupo final</div>
+          <div class="mc-value green" id="c-final">0</div>
+          <div class="mc-sub">meta + orgânico</div>
+          <canvas class="mc-spark" id="spark-final"></canvas>
+        </div>
+        <div class="metric-card">
+          <div class="mc-icon" style="background:rgba(245,197,66,.1);"><svg viewBox="0 0 24 24" stroke="#f5c542"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
+          <div class="mc-label">CPAs ativados</div>
+          <div class="mc-value yellow" id="c-cpas">0</div>
+          <div class="mc-sub">depósitos confirmados</div>
+          <canvas class="mc-spark" id="spark-cpa"></canvas>
+        </div>
+        <div class="metric-card">
+          <div class="mc-icon" style="background:rgba(255,140,66,.1);"><svg viewBox="0 0 24 24" stroke="#ff8c42"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg></div>
+          <div class="mc-label">CPL — Meta Ads</div>
+          <div class="mc-value orange" id="c-cpl-meta">R$ 0,00</div>
+          <div class="mc-sub">gasto ÷ leads Meta</div>
+        </div>
+        <div class="metric-card">
+          <div class="mc-icon" style="background:rgba(255,140,66,.1);"><svg viewBox="0 0 24 24" stroke="#ff8c42"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+          <div class="mc-label">CPL — Grupo final</div>
+          <div class="mc-value orange" id="c-cpl-final">R$ 0,00</div>
+          <div class="mc-sub">gasto ÷ leads totais</div>
+        </div>
+        <div class="metric-card">
+          <div class="mc-icon" style="background:rgba(255,77,109,.1);"><svg viewBox="0 0 24 24" stroke="#ff4d6d"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+          <div class="mc-label">Custo por CPA</div>
+          <div class="mc-value red" id="c-custo-cpa">R$ 0,00</div>
+          <div class="mc-sub">gasto ÷ CPAs</div>
+        </div>
+        <div class="metric-card">
+          <div class="mc-icon" style="background:rgba(0,229,160,.1);"><svg viewBox="0 0 24 24" stroke="#00e5a0"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+          <div class="mc-label">Receita CPA</div>
+          <div class="mc-value green" id="c-receita">R$ 0,00</div>
+          <div class="mc-sub" id="c-receita-sub">defina o CPA abaixo</div>
+        </div>
+      </div>
+
+      <div class="form-sec">
+        <div class="form-sec-title"><span class="dot-g"></span>Adicionar registro diário</div>
+        <div class="cpa-row">
+          <label>Valor do CPA (R$):</label>
+          <input type="number" class="cpa-inp" id="cpa-valor" placeholder="ex: 150,00" step="0.01" min="0" oninput="saveAndRender()"/>
+          <span class="tax-badge">Imposto Meta: 12,15% (auto)</span>
+        </div>
+        <div class="inputs-grid">
+          <div class="fg"><label>Data</label><input type="date" id="inp-data"/></div>
+          <div class="fg"><label>Valor gasto (R$)</label><input type="number" id="inp-gasto" placeholder="300,00" step="0.01" min="0"/></div>
+          <div class="fg"><label>Leads Meta Ads</label><input type="number" id="inp-meta" placeholder="60" min="0"/></div>
+          <div class="fg"><label>Grupo final</label><input type="number" id="inp-final" placeholder="75" min="0"/></div>
+          <div class="fg"><label>CPAs ativados</label><input type="number" id="inp-cpas" placeholder="5" min="0"/></div>
+        </div>
+        <button class="btn-add" onclick="addEntry()">+ Adicionar registro</button>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-title">Leads por dia</div>
+          <div class="chart-wrap"><canvas id="ch-leads"></canvas></div>
+          <div class="leg-row">
+            <span class="leg"><span class="leg-sq" style="background:#4da6ff;"></span>Meta Ads</span>
+            <span class="leg"><span class="leg-sq" style="background:#00e5a0;"></span>Grupo final</span>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">CPL por dia (R$)</div>
+          <div class="chart-wrap"><canvas id="ch-cpl"></canvas></div>
+          <div class="leg-row">
+            <span class="leg"><span class="leg-sq" style="background:#ff8c42;"></span>CPL Meta</span>
+            <span class="leg"><span class="leg-sq" style="background:#f5c542;"></span>CPL Final</span>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Gasto total por dia (c/ imposto)</div>
+          <div class="chart-wrap"><canvas id="ch-gasto"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">CPAs ativados por dia</div>
+          <div class="chart-wrap"><canvas id="ch-cpa"></canvas></div>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="chart-title" style="margin-bottom:12px;">Histórico de registros</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Data</th><th>Gasto base</th><th>Imposto</th><th>Gasto total</th>
+              <th>Leads Meta</th><th>Grupo final</th><th>CPAs</th>
+              <th>CPL Meta</th><th>CPL Final</th><th>Custo/CPA</th><th>Status</th><th></th>
+            </tr></thead>
+            <tbody id="tabela-body">
+              <tr><td colspan="12" class="empty-st">Nenhum registro ainda.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ABA 2: RELATÓRIOS -->
+    <div class="content" id="tab-1" style="display:none;">
+      <div class="section-label">Relatórios</div>
+      <div class="form-sec" style="margin-bottom:18px;">
+        <div class="form-sec-title"><span class="dot-g"></span>Filtrar por período</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+          <div class="fg"><label>De</label><input type="date" id="fil-de"/></div>
+          <div class="fg"><label>Até</label><input type="date" id="fil-ate"/></div>
+          <button class="btn-add" style="width:auto;padding:8px 18px;margin-top:14px;" onclick="renderRelatorio()">Filtrar</button>
+          <button onclick="limparFiltro()" style="background:var(--bg-600);color:var(--text-secondary);border:1px solid var(--border-md);border-radius:8px;padding:8px 14px;font-size:12px;cursor:pointer;margin-top:14px;">Limpar</button>
+        </div>
+      </div>
+
+      <div class="cards-grid" id="rel-cards" style="margin-bottom:18px;"></div>
+
+      <div class="charts-grid" style="margin-bottom:18px;">
+        <div class="chart-card" style="grid-column:1/-1;">
+          <div class="chart-title">Evolução do gasto e CPL no período</div>
+          <div class="chart-wrap" style="height:220px;"><canvas id="ch-rel-evolucao"></canvas></div>
+          <div class="leg-row">
+            <span class="leg"><span class="leg-sq" style="background:#4da6ff;"></span>Gasto total</span>
+            <span class="leg"><span class="leg-sq" style="background:#ff8c42;"></span>CPL Meta</span>
+            <span class="leg"><span class="leg-sq" style="background:#f5c542;"></span>CPL Final</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="chart-title" style="margin-bottom:12px;">Detalhamento do período</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Data</th><th>Gasto total</th><th>Leads Meta</th><th>Grupo final</th>
+              <th>CPAs</th><th>CPL Meta</th><th>CPL Final</th><th>Custo/CPA</th><th>Receita CPA</th><th>Resultado</th>
+            </tr></thead>
+            <tbody id="rel-body"><tr><td colspan="10" class="empty-st">Nenhum dado no período.</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ABA 3: CONFIGURAÇÕES -->
+    <div class="content" id="tab-2" style="display:none;">
+      <div class="section-label">Configurações</div>
+
+      <div class="form-sec" style="margin-bottom:14px;">
+        <div class="form-sec-title"><span class="dot-g"></span>Alterar senha de acesso</div>
+        <div class="inputs-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));">
+          <div class="fg"><label>Senha atual</label><input type="password" id="cfg-senha-atual" placeholder="••••••••"/></div>
+          <div class="fg"><label>Nova senha</label><input type="password" id="cfg-senha-nova" placeholder="••••••••"/></div>
+          <div class="fg"><label>Confirmar nova senha</label><input type="password" id="cfg-senha-conf" placeholder="••••••••"/></div>
+        </div>
+        <div id="cfg-senha-msg" style="font-size:12px;margin-bottom:10px;display:none;padding:8px 12px;border-radius:8px;"></div>
+        <button class="btn-add" style="width:auto;padding:9px 20px;" onclick="alterarSenha()">Salvar nova senha</button>
+      </div>
+
+      <div class="form-sec" style="margin-bottom:14px;">
+        <div class="form-sec-title"><span class="dot-g"></span>Metas mensais</div>
+        <div class="inputs-grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));">
+          <div class="fg"><label>Meta de leads/mês</label><input type="number" id="cfg-meta-leads" placeholder="ex: 1500" min="0" oninput="salvarConfig()"/></div>
+          <div class="fg"><label>Meta de CPAs/mês</label><input type="number" id="cfg-meta-cpas" placeholder="ex: 50" min="0" oninput="salvarConfig()"/></div>
+          <div class="fg"><label>Meta de receita (R$)</label><input type="number" id="cfg-meta-receita" placeholder="ex: 7500" min="0" oninput="salvarConfig()"/></div>
+          <div class="fg"><label>Orçamento mensal (R$)</label><input type="number" id="cfg-orcamento" placeholder="ex: 5000" min="0" oninput="salvarConfig()"/></div>
+        </div>
+      </div>
+
+      <div class="form-sec" style="margin-bottom:14px;">
+        <div class="form-sec-title" style="color:var(--red);">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ff4d6d" stroke-width="1.8" style="margin-right:4px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Zona de perigo
+        </div>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;">Esta ação apaga todos os registros permanentemente e não pode ser desfeita.</p>
+        <button onclick="apagarTudo()" style="background:rgba(255,77,109,.08);border:1px solid rgba(255,77,109,.2);color:var(--red);border-radius:8px;padding:9px 18px;font-size:13px;cursor:pointer;">Apagar todos os registros</button>
+      </div>
+
+      <div class="form-sec">
+        <div class="form-sec-title">Progresso das metas do mês atual</div>
+        <div id="metas-progresso" style="display:grid;gap:12px;"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const IMPOSTO = 0.1215;
+let dados = [];
+let senhaAtual = 'bacbo2024';
+let chL=null,chC=null,chG=null,chP=null,chRel=null;
+
+/* STORAGE — localStorage */
+function store(key, val){ try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){} }
+function retrieve(key){ try{ const v=localStorage.getItem(key); return v?JSON.parse(v):null; }catch(e){ return null; } }
+
+function loadData(){
+  const saved = retrieve('igaming_dados');
+  if(saved){ dados = saved; }
+  const cpa = retrieve('igaming_cpa');
+  if(cpa) document.getElementById('cpa-valor').value = cpa;
+  const senha = retrieve('igaming_senha');
+  if(senha) senhaAtual = senha;
+  const cfg = retrieve('igaming_config');
+  if(cfg){
+    if(cfg.metaLeads) document.getElementById('cfg-meta-leads').value = cfg.metaLeads;
+    if(cfg.metaCpas) document.getElementById('cfg-meta-cpas').value = cfg.metaCpas;
+    if(cfg.metaReceita) document.getElementById('cfg-meta-receita').value = cfg.metaReceita;
+    if(cfg.orcamento) document.getElementById('cfg-orcamento').value = cfg.orcamento;
+  }
+  document.getElementById('inp-data').value = new Date().toISOString().split('T')[0];
+  renderAll();
+}
+
+function saveData(){
+  store('igaming_dados', dados);
+  store('igaming_cpa', document.getElementById('cpa-valor').value);
+}
+
+function salvarConfig(){
+  store('igaming_config',{
+    metaLeads: document.getElementById('cfg-meta-leads').value,
+    metaCpas: document.getElementById('cfg-meta-cpas').value,
+    metaReceita: document.getElementById('cfg-meta-receita').value,
+    orcamento: document.getElementById('cfg-orcamento').value,
+  });
+  renderMetas();
+}
+
+/* AUTH */
+function doLogin(){
+  const v = document.getElementById('inp-senha').value;
+  const err = document.getElementById('err-msg');
+  if(v === senhaAtual){
+    err.classList.remove('show');
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('dash-screen').style.display='flex';
+    loadData();
+  } else {
+    err.classList.add('show');
+    document.getElementById('inp-senha').value='';
+    document.getElementById('inp-senha').focus();
+  }
+}
+function doLogout(){
+  document.getElementById('dash-screen').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('inp-senha').value='';
+}
+function alterarSenha(){
+  const atual = document.getElementById('cfg-senha-atual').value;
+  const nova = document.getElementById('cfg-senha-nova').value;
+  const conf = document.getElementById('cfg-senha-conf').value;
+  const msg = document.getElementById('cfg-senha-msg');
+  msg.style.display='block';
+  if(atual !== senhaAtual){ msg.style.background='rgba(255,77,109,.08)'; msg.style.color='#ff4d6d'; msg.style.border='1px solid rgba(255,77,109,.2)'; msg.textContent='Senha atual incorreta.'; return; }
+  if(nova.length < 4){ msg.style.background='rgba(255,77,109,.08)'; msg.style.color='#ff4d6d'; msg.style.border='1px solid rgba(255,77,109,.2)'; msg.textContent='Nova senha muito curta (mínimo 4 caracteres).'; return; }
+  if(nova !== conf){ msg.style.background='rgba(255,77,109,.08)'; msg.style.color='#ff4d6d'; msg.style.border='1px solid rgba(255,77,109,.2)'; msg.textContent='As senhas não coincidem.'; return; }
+  senhaAtual = nova;
+  store('igaming_senha', nova);
+  msg.style.background='rgba(0,229,160,.08)'; msg.style.color='#00e5a0'; msg.style.border='1px solid rgba(0,229,160,.2)'; msg.textContent='Senha alterada com sucesso!';
+  document.getElementById('cfg-senha-atual').value='';
+  document.getElementById('cfg-senha-nova').value='';
+  document.getElementById('cfg-senha-conf').value='';
+}
+
+/* TABS */
+function setTab(i, btn){
+  [0,1,2].forEach(n => {
+    document.getElementById('tab-'+n).style.display = n===i ? 'block' : 'none';
+  });
+  document.querySelectorAll('.sb-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if(i===1) renderRelatorio();
+  if(i===2) renderMetas();
+}
+
+/* DATA */
+function addEntry(){
+  const data = document.getElementById('inp-data').value;
+  const gasto = parseFloat(document.getElementById('inp-gasto').value);
+  const meta = parseFloat(document.getElementById('inp-meta').value);
+  const fin = parseFloat(document.getElementById('inp-final').value);
+  const cpas = parseFloat(document.getElementById('inp-cpas').value);
+  if(!data||isNaN(gasto)||isNaN(meta)||isNaN(fin)||isNaN(cpas)){ alert('Preencha todos os campos.'); return; }
+  dados.push({data,gasto,meta,final:fin,cpas});
+  dados.sort((a,b)=>a.data.localeCompare(b.data));
+  saveData(); renderAll();
+  ['inp-gasto','inp-meta','inp-final','inp-cpas'].forEach(id=>document.getElementById(id).value='');
+}
+function deleteEntry(i){ dados.splice(i,1); saveData(); renderAll(); }
+function apagarTudo(){
+  if(confirm('Tem certeza? Todos os registros serão apagados permanentemente.')){ dados=[]; saveData(); renderAll(); }
+}
+
+/* HELPERS */
+const gt = g => g*(1+IMPOSTO);
+const imp = g => g*IMPOSTO;
+const brl = v => 'R$ '+v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmt = s => { const[y,m,d]=s.split('-'); return d+'/'+m+'/'+y; };
+const fmtS = s => { const[y,m,d]=s.split('-'); return d+'/'+m; };
+const getCpa = () => { const v=parseFloat(document.getElementById('cpa-valor').value); return isNaN(v)?0:v; };
+function saveAndRender(){ saveData(); renderAll(); }
+
+function renderAll(){ renderCards(); renderTable(); renderCharts(); renderPeriodo(); }
+
+function renderPeriodo(){
+  const el=document.getElementById('periodo-lbl');
+  if(!dados.length){ el.textContent='Sem dados'; return; }
+  el.textContent=dados.length===1?fmt(dados[0].data):fmt(dados[0].data)+' — '+fmt(dados[dados.length-1].data);
+}
+
+function renderCards(){
+  const cpaV=getCpa();
+  const tB=dados.reduce((s,d)=>s+d.gasto,0);
+  const tI=dados.reduce((s,d)=>s+imp(d.gasto),0);
+  const tG=tB+tI;
+  const tM=dados.reduce((s,d)=>s+d.meta,0);
+  const tF=dados.reduce((s,d)=>s+d.final,0);
+  const tC=dados.reduce((s,d)=>s+d.cpas,0);
+  document.getElementById('c-gasto').textContent=brl(tG);
+  document.getElementById('c-gasto-sub').textContent='base '+brl(tB)+' + imposto '+brl(tI);
+  document.getElementById('c-meta').textContent=tM.toLocaleString('pt-BR');
+  document.getElementById('c-final').textContent=tF.toLocaleString('pt-BR');
+  document.getElementById('c-cpas').textContent=tC.toLocaleString('pt-BR');
+  document.getElementById('c-cpl-meta').textContent=brl(tM>0?tG/tM:0);
+  document.getElementById('c-cpl-final').textContent=brl(tF>0?tG/tF:0);
+  document.getElementById('c-custo-cpa').textContent=brl(tC>0?tG/tC:0);
+  document.getElementById('c-receita').textContent=brl(tC*cpaV);
+  document.getElementById('c-receita-sub').textContent=cpaV>0?tC+' × R$ '+cpaV.toFixed(2):'defina o CPA acima';
+}
+
+function renderTable(){
+  const tbody=document.getElementById('tabela-body');
+  const cpaV=getCpa();
+  if(!dados.length){ tbody.innerHTML='<tr><td colspan="12" class="empty-st">Nenhum registro ainda.</td></tr>'; return; }
+  tbody.innerHTML=dados.map((d,i)=>{
+    const total=gt(d.gasto), im=imp(d.gasto);
+    const cplM=d.meta>0?total/d.meta:0;
+    const cplF=d.final>0?total/d.final:0;
+    const cC=d.cpas>0?total/d.cpas:0;
+    const lucro=d.cpas*cpaV-total;
+    let pill,ptag;
+    if(cpaV===0){pill='Indefinido';ptag='p-blue';}
+    else if(lucro>0){pill='Lucrativo';ptag='p-green';}
+    else{pill='Prejuízo';ptag='p-red';}
+    return`<tr><td>${fmt(d.data)}</td><td>${brl(d.gasto)}</td><td>${brl(im)}</td><td>${brl(total)}</td><td>${d.meta}</td><td>${d.final}</td><td>${d.cpas}</td><td>${brl(cplM)}</td><td>${brl(cplF)}</td><td>${d.cpas>0?brl(cC):'—'}</td><td><span class="pill ${ptag}">${pill}</span></td><td><button class="del-btn" onclick="deleteEntry(${i})">✕</button></td></tr>`;
+  }).join('');
+}
+
+function spark(id,data,color){
+  const c=document.getElementById(id); if(!c)return;
+  const ex=Chart.getChart(c); if(ex)ex.destroy();
+  if(!data.length)return;
+  new Chart(c,{type:'line',data:{labels:data.map((_,i)=>i),datasets:[{data,borderColor:color,borderWidth:1.5,pointRadius:0,tension:.4,fill:true,backgroundColor:color+'1a'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{display:false},y:{display:false}},animation:false}});
+}
+
+function renderCharts(){
+  const labels=dados.map(d=>fmtS(d.data));
+  const mD=dados.map(d=>d.meta);
+  const fD=dados.map(d=>d.final);
+  const cmD=dados.map(d=>d.meta>0?parseFloat((gt(d.gasto)/d.meta).toFixed(2)):0);
+  const cfD=dados.map(d=>d.final>0?parseFloat((gt(d.gasto)/d.final).toFixed(2)):0);
+  const gD=dados.map(d=>parseFloat(gt(d.gasto).toFixed(2)));
+  const cD=dados.map(d=>d.cpas);
+  const bo={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#555',font:{size:10},autoSkip:false,maxRotation:45},grid:{color:'rgba(255,255,255,0.04)'},border:{color:'rgba(255,255,255,0.06)'}},y:{ticks:{color:'#555',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'},border:{color:'rgba(255,255,255,0.06)'}}}};
+  if(chL)chL.destroy();
+  chL=new Chart(document.getElementById('ch-leads'),{type:'bar',data:{labels,datasets:[{data:mD,backgroundColor:'#4da6ff',borderRadius:3},{data:fD,backgroundColor:'#00e5a0',borderRadius:3}]},options:{...bo}});
+  if(chC)chC.destroy();
+  chC=new Chart(document.getElementById('ch-cpl'),{type:'line',data:{labels,datasets:[{data:cmD,borderColor:'#ff8c42',backgroundColor:'rgba(255,140,66,0.08)',tension:.4,pointRadius:3,pointBackgroundColor:'#ff8c42',fill:true},{data:cfD,borderColor:'#f5c542',backgroundColor:'rgba(245,197,66,0.08)',tension:.4,pointRadius:3,pointBackgroundColor:'#f5c542',fill:true}]},options:{...bo}});
+  if(chG)chG.destroy();
+  chG=new Chart(document.getElementById('ch-gasto'),{type:'bar',data:{labels,datasets:[{data:gD,backgroundColor:'#4da6ff',borderRadius:3}]},options:{...bo}});
+  if(chP)chP.destroy();
+  chP=new Chart(document.getElementById('ch-cpa'),{type:'bar',data:{labels,datasets:[{data:cD,backgroundColor:'#f5c542',borderRadius:3}]},options:{...bo}});
+  spark('spark-gasto',gD,'#4da6ff');
+  spark('spark-meta',mD,'#00e5a0');
+  spark('spark-final',fD,'#00e5a0');
+  spark('spark-cpa',cD,'#f5c542');
+}
+
+/* ABA 2 — RELATÓRIOS */
+function limparFiltro(){
+  document.getElementById('fil-de').value='';
+  document.getElementById('fil-ate').value='';
+  renderRelatorio();
+}
+function renderRelatorio(){
+  const cpaV=getCpa();
+  const de=document.getElementById('fil-de').value;
+  const ate=document.getElementById('fil-ate').value;
+  const filtrado=dados.filter(d=>{
+    if(de && d.data < de) return false;
+    if(ate && d.data > ate) return false;
+    return true;
+  });
+  const tB=filtrado.reduce((s,d)=>s+d.gasto,0);
+  const tG=filtrado.reduce((s,d)=>s+gt(d.gasto),0);
+  const tM=filtrado.reduce((s,d)=>s+d.meta,0);
+  const tF=filtrado.reduce((s,d)=>s+d.final,0);
+  const tC=filtrado.reduce((s,d)=>s+d.cpas,0);
+  const receita=tC*cpaV;
+  const lucro=receita-tG;
+
+  const cards=[
+    {label:'Gasto total',val:brl(tG),color:'blue'},
+    {label:'Leads Meta',val:tM.toLocaleString('pt-BR'),color:'green'},
+    {label:'CPAs ativados',val:tC.toLocaleString('pt-BR'),color:'yellow'},
+    {label:'Receita CPA',val:brl(receita),color:'green'},
+    {label:'CPL Meta',val:brl(tM>0?tG/tM:0),color:'orange'},
+    {label:'CPL Final',val:brl(tF>0?tG/tF:0),color:'orange'},
+    {label:'Custo/CPA',val:brl(tC>0?tG/tC:0),color:'red'},
+    {label:'Resultado',val:brl(lucro),color:lucro>=0?'green':'red'},
+  ];
+  document.getElementById('rel-cards').innerHTML=cards.map(c=>`
+    <div class="metric-card"><div class="mc-label">${c.label}</div><div class="mc-value ${c.color}">${c.val}</div></div>
+  `).join('');
+
+  const labels=filtrado.map(d=>fmtS(d.data));
+  const gD=filtrado.map(d=>parseFloat(gt(d.gasto).toFixed(2)));
+  const cmD=filtrado.map(d=>d.meta>0?parseFloat((gt(d.gasto)/d.meta).toFixed(2)):0);
+  const cfD=filtrado.map(d=>d.final>0?parseFloat((gt(d.gasto)/d.final).toFixed(2)):0);
+  const bo={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#555',font:{size:10},autoSkip:false,maxRotation:45},grid:{color:'rgba(255,255,255,0.04)'},border:{color:'rgba(255,255,255,0.06)'}},y:{ticks:{color:'#555',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'},border:{color:'rgba(255,255,255,0.06)'}}}};
+  if(chRel)chRel.destroy();
+  chRel=new Chart(document.getElementById('ch-rel-evolucao'),{type:'line',data:{labels,datasets:[{data:gD,borderColor:'#4da6ff',backgroundColor:'rgba(77,166,255,0.07)',tension:.4,pointRadius:3,pointBackgroundColor:'#4da6ff',fill:true,label:'Gasto'},{data:cmD,borderColor:'#ff8c42',backgroundColor:'transparent',tension:.4,pointRadius:3,pointBackgroundColor:'#ff8c42',label:'CPL Meta'},{data:cfD,borderColor:'#f5c542',backgroundColor:'transparent',tension:.4,pointRadius:3,pointBackgroundColor:'#f5c542',label:'CPL Final'}]},options:{...bo}});
+
+  const tbody=document.getElementById('rel-body');
+  if(!filtrado.length){ tbody.innerHTML='<tr><td colspan="10" class="empty-st">Nenhum dado no período selecionado.</td></tr>'; return; }
+  tbody.innerHTML=filtrado.map(d=>{
+    const total=gt(d.gasto);
+    const cplM=d.meta>0?total/d.meta:0;
+    const cplF=d.final>0?total/d.final:0;
+    const cC=d.cpas>0?total/d.cpas:0;
+    const rec=d.cpas*cpaV;
+    const luc=rec-total;
+    const pill=cpaV===0?'<span class="pill p-blue">Indefinido</span>':luc>0?'<span class="pill p-green">Lucrativo</span>':'<span class="pill p-red">Prejuízo</span>';
+    return`<tr><td>${fmt(d.data)}</td><td>${brl(total)}</td><td>${d.meta}</td><td>${d.final}</td><td>${d.cpas}</td><td>${brl(cplM)}</td><td>${brl(cplF)}</td><td>${d.cpas>0?brl(cC):'—'}</td><td>${brl(rec)}</td><td>${pill}</td></tr>`;
+  }).join('');
+}
+
+/* ABA 3 — METAS */
+function renderMetas(){
+  const cpaV=getCpa();
+  const agora=new Date();
+  const mesAtual=agora.toISOString().slice(0,7);
+  const dadosMes=dados.filter(d=>d.data.startsWith(mesAtual));
+  const tG=dadosMes.reduce((s,d)=>s+gt(d.gasto),0);
+  const tM=dadosMes.reduce((s,d)=>s+d.meta,0);
+  const tC=dadosMes.reduce((s,d)=>s+d.cpas,0);
+  const rec=tC*cpaV;
+
+  const cfg=retrieve('igaming_config')||{};
+  const mLeads=parseFloat(cfg.metaLeads)||0;
+  const mCpas=parseFloat(cfg.metaCpas)||0;
+  const mReceita=parseFloat(cfg.metaReceita)||0;
+  const mOrc=parseFloat(cfg.orcamento)||0;
+
+  const itens=[
+    {label:'Leads Meta no mês',atual:tM,meta:mLeads,cor:'#4da6ff'},
+    {label:'CPAs ativados no mês',atual:tC,meta:mCpas,cor:'#f5c542'},
+    {label:'Receita CPA no mês',atual:rec,meta:mReceita,cor:'#00e5a0',isMoney:true},
+    {label:'Orçamento utilizado',atual:tG,meta:mOrc,cor:'#ff8c42',isMoney:true,inverso:true},
+  ];
+
+  document.getElementById('metas-progresso').innerHTML=itens.map(it=>{
+    const pct=it.meta>0?Math.min(100,Math.round((it.atual/it.meta)*100)):0;
+    const cor=it.inverso?(pct>90?'#ff4d6d':it.cor):it.cor;
+    const valAtual=it.isMoney?brl(it.atual):it.atual.toLocaleString('pt-BR');
+    const valMeta=it.meta>0?(it.isMoney?brl(it.meta):it.meta.toLocaleString('pt-BR')):'Não definida';
+    return`<div style="background:var(--bg-700);border-radius:10px;padding:14px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+        <span style="font-size:12px;color:var(--text-secondary);">${it.label}</span>
+        <span style="font-size:12px;color:${cor};font-weight:500;">${pct}%</span>
+      </div>
+      <div style="height:6px;background:var(--bg-500);border-radius:3px;overflow:hidden;margin-bottom:6px;">
+        <div style="height:100%;width:${pct}%;background:${cor};border-radius:3px;transition:width .3s;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;">
+        <span style="font-size:11px;color:var(--text-muted);">Atual: ${valAtual}</span>
+        <span style="font-size:11px;color:var(--text-muted);">Meta: ${valMeta}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+</script>
+</body>
+</html>
